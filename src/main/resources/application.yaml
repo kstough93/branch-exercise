@@ -1,0 +1,7 @@
+spring:
+  application:
+    name: branch-exercise
+  cache:
+    cache-names: userRepoCache
+    caffeine:
+      spec: maximumSize=500,expireAfterWrite=300s
