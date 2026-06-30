@@ -11,7 +11,6 @@ import com.example.branchexercise.model.GitHubUserRepoResponse;
 import com.example.branchexercise.model.GitHubUserResponse;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.mapstruct.factory.Mappers;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
@@ -22,15 +21,19 @@ public class GitHubServiceImpl implements GitHubService {
     private static final Logger logger = LogManager.getLogger(GitHubServiceImpl.class);
 
     private final RestClient restClient;
+    private final GitHubUserMapper gitHubUserMapper;
+    private final GitHubUserRepoMapper gitHubUserRepoMapper;
 
-    public GitHubServiceImpl(RestClient restClient) {
+    public GitHubServiceImpl(RestClient restClient,
+                             GitHubUserMapper gitHubUserMapper,
+                             GitHubUserRepoMapper gitHubUserRepoMapper) {
+        this.gitHubUserMapper = gitHubUserMapper;
+        this.gitHubUserRepoMapper = gitHubUserRepoMapper;
         this.restClient = restClient;
     }
 
     @Override
     public GitHubUserDto getGitHubUser(String userName) {
-        GitHubUserMapper gitHubUserMapper = Mappers.getMapper(GitHubUserMapper.class);
-
         logger.info("Retrieving GitHub user info for {}", userName);
 
         GitHubUserResponse gitHubUserResponse = restClient
@@ -40,11 +43,11 @@ public class GitHubServiceImpl implements GitHubService {
                 .onStatus(status -> status.value() == 429, (request, response) -> {
                     throw new TooManyRequestsException("Too many requests, please try again later, Http Status: " + response.getStatusCode());
                 })
-                .onStatus(HttpStatusCode::is4xxClientError, (request, response) -> {
-                    throw new UserNotFoundException("GitHub error: " + response.getStatusCode());
-                })
                 .onStatus(status -> status.value() == 503, (request, response) -> {
                     throw new ServiceUnavailableException("GitHub Service is temporarily unavailable, please try again later, Http Status: " + response.getStatusCode());
+                })
+                .onStatus(HttpStatusCode::is4xxClientError, (request, response) -> {
+                    throw new UserNotFoundException("GitHub error: " + response.getStatusCode());
                 })
                 .body(GitHubUserResponse.class);
 
@@ -53,9 +56,7 @@ public class GitHubServiceImpl implements GitHubService {
 
     @Override
     public List<GitHubUserRepoDto> getGitHubUserRepos(String userName) {
-        GitHubUserRepoMapper gitHubUserRepoMapper = Mappers.getMapper(GitHubUserRepoMapper.class);
-
-        logger.info("Retrieving GitHub user repo infor for {}", userName);
+        logger.info("Retrieving GitHub user repo info for {}", userName);
 
         GitHubUserRepoResponse[] gitHubUserRepoResponse = restClient
                 .get()
@@ -64,11 +65,11 @@ public class GitHubServiceImpl implements GitHubService {
                 .onStatus(status -> status.value() == 429, (request, response) -> {
                     throw new TooManyRequestsException("Too many requests, please try again later, Http Status: " + response.getStatusCode());
                 })
-                .onStatus(HttpStatusCode::is4xxClientError, (request, response) -> {
-                    throw new UserNotFoundException("GitHub error: " + response.getStatusCode());
-                })
                 .onStatus(status -> status.value() == 503, (request, response) -> {
                     throw new ServiceUnavailableException("GitHub Service is temporarily unavailable, please try again later, Http Status: " + response.getStatusCode());
+                })
+                .onStatus(HttpStatusCode::is4xxClientError, (request, response) -> {
+                    throw new UserNotFoundException("GitHub error: " + response.getStatusCode());
                 })
                 .body(GitHubUserRepoResponse[].class);
 

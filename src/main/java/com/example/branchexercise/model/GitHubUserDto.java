@@ -1,11 +1,11 @@
 package com.example.branchexercise.model;
 
 public record GitHubUserDto(
-        String user_name,
-        String display_name,
+        String userName,
+        String displayName,
         String avatar,
-        String geo_location,
+        String geoLocation,
         String email,
         String url,
-        String created_at
+        String createdAt
 ) {}

@@ -1,14 +1,16 @@
 package com.example.branchexercise.model;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import java.util.List;
 
-public record GitHubResponse (
-        String user_name, // login
-        String display_name, // name
-        String avatar, // avatar_url
-        String geo_location, // location
-        String email, // email
-        String url, //url
-        String created_at, // created_at
+public record GitHubResponse(
+        @JsonProperty("user_name") String userName,
+        @JsonProperty("display_name") String displayName,
+        String avatar,
+        @JsonProperty("geo_location") String geoLocation,
+        String email,
+        String url,
+        @JsonProperty("created_at") String createdAt,
         List<GitHubUserRepoDto> repos
-){}
+) {}

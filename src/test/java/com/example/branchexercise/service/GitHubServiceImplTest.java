@@ -3,12 +3,19 @@ package com.example.branchexercise.service;
 import com.example.branchexercise.exception.ServiceUnavailableException;
 import com.example.branchexercise.exception.TooManyRequestsException;
 import com.example.branchexercise.exception.UserNotFoundException;
+import com.example.branchexercise.mapper.GitHubUserMapper;
+import com.example.branchexercise.mapper.GitHubUserMapperImpl;
+import com.example.branchexercise.mapper.GitHubUserRepoMapper;
+import com.example.branchexercise.mapper.GitHubUserRepoMapperImpl;
 import com.example.branchexercise.model.GitHubUserDto;
 import com.example.branchexercise.model.GitHubUserRepoDto;
+import com.fasterxml.jackson.databind.json.JsonMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.test.web.client.MockRestServiceServer;
 import org.springframework.web.client.RestClient;
 
@@ -20,15 +27,29 @@ import static org.springframework.test.web.client.match.MockRestRequestMatchers.
 import static org.springframework.test.web.client.response.MockRestResponseCreators.*;
 
 class GitHubServiceImplTest {
-
     private MockRestServiceServer mockServer;
     private GitHubServiceImpl service;
+    private final GitHubUserMapper gitHubUserMapper;
+    private final GitHubUserRepoMapper gitHubUserRepoMapper;
+
+    GitHubServiceImplTest() {
+        this.gitHubUserMapper = new GitHubUserMapperImpl();
+        this.gitHubUserRepoMapper = new GitHubUserRepoMapperImpl();
+    }
 
     @BeforeEach
     void setUp() {
-        RestClient.Builder clientBuilder = RestClient.builder().baseUrl("https://api.github.com");
+        MappingJackson2HttpMessageConverter jacksonConverter = new MappingJackson2HttpMessageConverter(
+                JsonMapper.builder().addModule(new JavaTimeModule()).build());
+
+        RestClient.Builder clientBuilder = RestClient.builder()
+                .baseUrl("https://api.github.com")
+                .messageConverters(converters -> {
+                    converters.removeIf(c -> c instanceof MappingJackson2HttpMessageConverter);
+                    converters.add(jacksonConverter);
+                });
         mockServer = MockRestServiceServer.bindTo(clientBuilder).build();
-        service = new GitHubServiceImpl(clientBuilder.build());
+        service = new GitHubServiceImpl(clientBuilder.build(), gitHubUserMapper, gitHubUserRepoMapper);
     }
 
     // --- getGitHubUser ---
@@ -44,11 +65,11 @@ class GitHubServiceImplTest {
         GitHubUserDto result = service.getGitHubUser("octocat");
 
         assertNotNull(result);
-        assertEquals("octocat", result.user_name());
-        assertEquals("The Octocat", result.display_name());
+        assertEquals("octocat", result.userName());
+        assertEquals("The Octocat", result.displayName());
         assertEquals("https://avatars.githubusercontent.com/u/583231?v=4", result.avatar());
-        assertEquals("San Francisco", result.geo_location());
-        assertEquals("2011-01-25T18:44:36Z", result.created_at());
+        assertEquals("San Francisco", result.geoLocation());
+        assertEquals("Tue, 25 Jan 2011 18:44:36 GMT", result.createdAt());
         mockServer.verify();
     }
 

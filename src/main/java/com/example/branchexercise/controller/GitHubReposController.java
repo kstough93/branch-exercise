@@ -10,11 +10,11 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/githubrepos/v1")
-public class GitHubRepos {
-    private static final Logger logger = LogManager.getLogger(GitHubRepos.class);
+public class GitHubReposController {
+    private static final Logger logger = LogManager.getLogger(GitHubReposController.class);
     private final GitHubUserRepoService gitHubUserRepoService;
 
-    public GitHubRepos(GitHubUserRepoService gitHubUserRepoService) {
+    public GitHubReposController(GitHubUserRepoService gitHubUserRepoService) {
         this.gitHubUserRepoService = gitHubUserRepoService;
     }
 
@@ -23,7 +23,7 @@ public class GitHubRepos {
         logger.info("Retrieving GitHub information for user {}.", userName);
 
         GitHubResponse response = gitHubUserRepoService.getGitHubUserRepos(userName);
-        return ResponseEntity.status(HttpStatus.CREATED)
+        return ResponseEntity.status(HttpStatus.OK)
                 .body(response);
     }
 }

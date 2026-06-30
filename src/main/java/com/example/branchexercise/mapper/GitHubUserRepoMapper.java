@@ -7,6 +7,5 @@ import org.mapstruct.Mapping;
 
 @Mapper(componentModel = "spring")
 public interface GitHubUserRepoMapper {
-    @Mapping(source = "htmlUrl", target = "url")
     GitHubUserRepoDto[] toDto(GitHubUserRepoResponse[] userRepos);
 }
